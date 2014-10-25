@@ -168,10 +168,14 @@ while(i < n){
 
 #####5.其他常用方法
 求和：<code>Array(0,1,2).sum		//元素类型必须为数值类型</code>
+
 最大值: <code>Array("12", "b").max	//ascii相加较大的,return "12"</code>
-排序：<code>Array(1,3,2,4).sorted(_ < _)		//Array(1,2,3,4)</code>
-mkString : <code>Array(1,2,3).mkString(" and ")	//1 and 2 and 3</code>
-		   <code>Array(1,2,3).mkString("<",",",">")	//<1,2,3></code>
+
+排序：<code>Array(1,3,2,4).sorted(\_ < \_)		//Array(1,2,3,4)</code>
+
+mkString : <code>Array(1,2,3).mkString(" and ")	//1 and 2 and 3
+                 Array(1,2,3).mkString("<",",",">")	  //<1,2,3></code>
+
 其余方法请参考：[scala doc array](http://www.scala-lang.org/api/2.10.4/#scala.Array)
 
 
@@ -196,6 +200,7 @@ val indexes = for(i <- 0 until a.length if first || a(i) > 0) yield {
 }
 for(j <- 0 until indexes.length) a(j) = a(indexes(j))
 a.trimEnd(a.length - indexes.length)</code></pre>
+
 > 输入一千个数的ArrayBuffer, 测试两种不同的截断方法，时间相差无几，有时候第一种方法还快 - -!
 
 
