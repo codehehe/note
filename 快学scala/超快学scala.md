@@ -88,9 +88,9 @@ __有默认参数的函数__:
 
 __任意个数参数的函数__:
 <pre><code>def sum(args : Int*) = {
-      var result = 0
-      for(arg <- args) result += arg
-      result
+    var result = 0
+    for(arg <- args) result += arg
+    result
 }</code></pre>
 
 __过程__:
@@ -181,7 +181,60 @@ mkString : <code>Array(1,2,3).mkString(" and ")	//1 and 2 and 3
 
 
 
+第四章 映射和元组
+-----------------------
+#####1.构造映射
+<code>val scores = Map("Alice" -> 10, "Bob" -> 3, "Cindy" ->8)    //不可变的映射</code>
+如果想要创建一个可变的映射，需要引入scala.collection.mutable.Map
+如果要从一个空的映射开始 <code>val map = new HashMap[String, Int]     //注意这里的HashMap也需要从mutable引入</code>
+> scala中，映射是对偶的集合。
+也可以用<code>val socres = Map(("Alice", 10) ,("Bob", 3), ("Cindy", 8))</code>这种对偶集合的方式创建映射
 
+
+#####2.从映射中取值
+<code>val bobsScore = scores("Bob")</code>
+如果映射中不包含"Bob"这个键，则会抛出异常java.util.NoSuchElementException
+检查某个键是否存在:<code>val bobsScore = if(scores.contains("Bob")) scores("Bob") else 0</code>
+更简单的方法:<code>val bobsScore = scores.contains("Bob", 0)</code>
+
+
+#####3.更新
+<code>scores("Bob") = 5   //更新</code>
+<code>scores("Fred") = 9   //添加</code>
+<code>scores += ("Bob" -> 5, "Fred" -> 9)  //更简单的操作</code>
+<code>scores -= ("Alice")   //-=当然也是支持的</code>
+
+
+#####4.迭代映射
+<code>for((k,v) <- map)   print("key : " + k + ", value : " + v)</code>
+<code>map.keySet    //获得所有键</code>
+<code>for(v <- map.values)    //遍历所有值</code>
+
+
+#####5.已排序的映射
+映射底层有两种实现，*平衡树*和*哈希表*.默认情况下，scala使用哈希表，要得到一个不可变的平衡树形映射，可以:
+<code>val scores = scala.collections.immutable.SortedMap("Alice" -> 10, "Bob" -> 3, "Cindy" ->8)</code>
+
+scala没有提供可变的平衡树映射.
+
+> 平衡树映射和哈希表映射的区别是什么？各适用于什么场景？
+
+
+#####6.元组
+映射是对偶的集合，对偶是元组的最简单形态，元组是不同类型的值得聚集。
+<code>(1, 3.14, "Fred")</code>
+类型为Tuple3[Int, Double, java.lang.String]
+访问元组：<code>val second = t._2</code>或者<code>t _2</code>
+> 元组通常用于函数不只返回一个值的情况
+
+
+#####7.拉链操作
+<pre><code>val symbols = Array("<", "-", ">")
+val counts = Array(2, 10, 2)
+val pairs = symbols.zip(counts)   //Array(("<", 2), ("-", 10), (">", 2))
+for((k,v) <- pairs) print(k * v)  //<<---------->></code></pre>
+
+> 练习，编写一段程序，从文件中读取单词。用一个可变映射来清点每个单词出现的频率。
 
 
 
@@ -201,8 +254,24 @@ val indexes = for(i <- 0 until a.length if first || a(i) > 0) yield {
 for(j <- 0 until indexes.length) a(j) = a(indexes(j))
 a.trimEnd(a.length - indexes.length)</code></pre>
 
-> 输入一千个数的ArrayBuffer, 测试两种不同的截断方法，时间相差无几，有时候第一种方法还快 - -!
+> 我对输入一千个数的ArrayBuffer, 测试两种不同的截断方法，时间相差无几，有时候第一种方法还快 - -!
 
+
+3.编写一段程序，从文件中读取单词。用一个可变映射来清点每个单词出现的频率。
+<pre><code>import scala.io.Source  
+import scala.collection.mutable.HashMap  
+  
+val source = Source.fromFile("myfile.txt").mkString  
+  
+val tokens = source.split("\\s+")  
+  
+val map = new HashMap[String,Int]  
+  
+for(key <- tokens){  
+    map(key) = map.getOrElse(key,0) + 1  
+}  
+  
+println(map.mkString(","))</code></pre>
 
 
 
