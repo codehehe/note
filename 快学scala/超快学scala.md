@@ -1,6 +1,6 @@
 超快学scala
 ====================
-> 《快学scala》学习笔记
+> 《快学scala》学习笔记 : 每敲一个键都是珍贵的
 
 
 
@@ -235,6 +235,165 @@ val pairs = symbols.zip(counts)   //Array(("<", 2), ("-", 10), (">", 2))
 for((k,v) <- pairs) print(k * v)  //<<---------->></code></pre>
 
 > 练习，编写一段程序，从文件中读取单词。用一个可变映射来清点每个单词出现的频率。
+
+
+第五章 类
+-----------------------
+
+#####1.简单类和无参方法
+类不需要声明为public,写public会报编译错误，默认具有公有可见性
+例子：
+<pre><code>class Counter{
+  private var value = 0
+  def increment() { value += 1 }
+  def current() = value
+}</code></pre>
+使用：
+<code>val counter = new Counter     //or new Counter()</code>
+调用无参方法，可以不用写()
+<code>counter.current</code>
+建议：对于改值器（例如上面的increment方法），要使用(),对于取值器，去掉()，可以通过声明不带()的改值器方法，来强制这种风格。
+
+
+#####2.属性
+java中为get/set方法实现.
+
+<pre><code>class Person{
+  var age = 0
+}</code></pre>
+这里定义了一个Person类，和一个公有字段，scala面向JVM生成了一个私有的age字段和相应的公有get/set方法，分别是age和age_=。
+如果将age声明为private，则生成的get/set也是私有的。
+要想看到以上效果，可以执行<code>scalac Person.class</code>,<code>javap -private Person</code>查看字节码
+
+<pre><code>public class Person {
+  private int age;
+  public int age();
+  public void age_$eq(int);     //=被翻译成了$eq
+  public Person();
+}</code></pre>
+
+可以重新定义get/set方法：
+<pre><code>class Person{
+  private var privateAge = 0    //改名，并变成私有
+  def age = privateAge
+  def age_= (newValue : Int){
+    privateAge = newValue
+  }
+}
+</code></pre>
+
+<pre><code>val fred = new Person
+fred.age = 20
+print(fred.age)</code></pre>
+
+
+**重要提示**
+1.如果字段是私有的，则get/set方法也是私有的
+2.如果字段是val，scala则只生成get方法(代表只读),和一个私有的final字段
+3.如果不需要任何get/set方法，将字段声明为private[this]
+
+新的需求，有一个这样的属性：客户端不能随意改值，但可以通过某种途径，可以修改这个值，也能取得这个值（例如之前的Counter类）。
+
+分析：1.用私有的字段（no，因没有公有的get方法）
+     2.设置属性为val（no，因没有公有的set方法）
+     3.需要提供一个私有字段，和一个属性的get方法，像这样：
+    <pre><code>class Counter{
+      private var value = 0
+      def increment() { value += 1 }
+      def current = value
+    }</code></pre>
+因为private属性没有提供公有的set方法，但是提供了increment方法，间接的修改了var value的值，同时又定义了一个current属性，来获取value的值
+
+
+#####3.对象私有字段
+<pre><code>class Counter{
+  private var value = 0
+  def increment() { value += 1 }
+  def current = value
+  def isLess(other : Counter) = value \< other.value    //可以访问到另外一个对象的私有字段
+}</code></pre>
+
+scala提供更加严格的访问限制，通过private[this]修饰来实现，<code>private[this] var value = 0</code>
+这样<code>other.value</code>就无法访问到了。对于这样的对象私有字段，scala根本不会声明get/set方法.
+
+
+#####4.Bean属性
+使用@BeanProperty标记，生成java bean所欲期的getXXX和setXXX方法
+
+<pre><code>class Person{
+  @BeanProperty var name : String = _
+}</code></pre>
+
+生成了四个方法：
+1.name:String
+2.name_=(newValue : String) : Unit
+3.getName() : String
+4.setName(newValue : String) : Unit
+
+或者：class Person(@BeanProperty var name : String)
+
+
+#####5.辅助构造器
+1.名称为this
+2.调用辅助构造器之前必须以一个先前已经定义过的辅助构造器或者主构造器的调用开始
+<pre><code>class Person{
+  private var name = ""
+  private var age = 0
+
+  def this(name : String){
+    this()  //调用主构造器
+    this.name = name
+  }
+
+  def this(name : String, age : Int){
+    this(name)  //调用之前的构造器
+    this.age = age
+  }
+}</code></pre>
+
+
+#####6.主构造器
+放在类名之后<code>class Person(val name: String, val age: Int){...}</code>，主构造器的参数被编译为参数
+
+在JVM中字节码如下：
+<pre><code>public class Person {
+  private final java.lang.String name;
+  private final int age;
+  public java.lang.String name();
+  public int age();
+  public Person(java.lang.String, int);
+}
+</code></pre>
+
+<pre><code>class Person{
+  print("constructor invoke...")  //构造函数的一部分
+}</code></pre>
+
+通过主构造器中使用默认的参数来避免过多的使用辅助构造器：
+<code>class Person(val name: String = "", val age: Int = 0){...}</code>
+
+如果不带val或var的参数被至少一个方法使用，则该参数被升级为字段：
+<pre><code>class Person(name: String, age: Int){
+  def desc = "name is " + name + " age : " + age
+}</code></pre>
+
+JVM中的字节码：
+<pre><code>public class Person {
+  private final java.lang.String name;
+  private final int age;
+  public java.lang.String desc();
+  public Person(java.lang.String, int);
+}</code></pre>
+
+
+总结(主构造器参数和生成的字段和方法):
+name : String : 对象私有字段。如果没有方法使用name，则没有name字段 
+private val/var name : String : 私有字段。私有的get/set方法
+val/var name : String : 私有字段。公有的get/set方法
+@BeanProperty val/var name : String : 私有字段。公有的scala版和javaBean版get/set方法 
+
+
+构造函数私有化：<code>class Person private(val id : Int)</code>
 
 
 
