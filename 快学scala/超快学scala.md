@@ -70,11 +70,11 @@ __守卫：__
 <code>for(i<-1 to 3; j<-1 to 3; i != j) print((10 * i + j) + “”) //12 13 22 23 32 33</code>
 
 __组合使用：__
-<code>for(i<-1 to 3; from = 4-i;j<- from to 3;) print((10 * i + j) + “”)	//13 22 23 31 32 33</code>
+<code>for(i<-1 to 3; from = 4-i;j<- from to 3) print((10 * i + j) + “”)	//13 22 23 31 32 33</code>
 
 __yield:__
 循环体以yield开始，则该循环可以构造出一个集合
-<code>for(i<-1 to 10) yield i % 3    //Vector(1,2,0,1,2,0,1,2,0,1)</code>
+<code>for(i <- 1 to 10) yield i % 3    //Vector(1,2,0,1,2,0,1,2,0,1)</code>
 
 
 #####5.函数
@@ -222,6 +222,7 @@ scala没有提供可变的平衡树映射.
 
 #####6.元组
 映射是对偶的集合，对偶是元组的最简单形态，元组是不同类型的值得聚集。
+*索引是从1开始的*
 <code>(1, 3.14, "Fred")</code>
 类型为Tuple3[Int, Double, java.lang.String]
 访问元组：<code>val second = t._2</code>或者<code>t _2</code>
@@ -394,6 +395,103 @@ val/var name : String : 私有字段。公有的get/set方法
 
 
 构造函数私有化：<code>class Person private(val id : Int)</code>
+
+
+
+
+第六章 对象
+-----------------------
+
+#####1.单例对象
+scala没有静态方法和静态字段，可以用object达到相同的目的
+<pre><code>object Account {
+  private var lastNum = 0
+  def newUniqueNum() = { lastNum += 1; lastNum}
+}</code></pre>
+
+当需要一个账号时，只需<code>Account.newUniqueNum()</code>
+
+对象的构造器，在该对象第一次被使用时调用
+
+注意，object不能提供带参数的构造器
+
+object常用于：
+1.作为存放工具函数或者常量的地方
+2.高效的共享单个不可变实例
+3.需要单例来协调某个服务（参考单例模式）
+
+
+
+#####2.伴生对象
+用途：有时会遇到既需要静态方法，又有实例方法的类
+scala中通过类和与其同名的伴生对象来访问，类和他的伴生对象可以相互访问私有的特性，只要他们在同一个源文件中。
+<pre><code>class Account{
+  val id = Account.newUniqueNum()
+  private var balance = 0.0
+  def deposit(amount: Double) { balance += amount }
+}
+object Account {
+  private var lastNum = 0
+  def newUniqueNum() = { lastNum += 1; lastNum}
+}</code></pre>
+
+
+
+#####3.apply方法
+如下形式的表达式，apply方法被调用：
+<code>Object(param1, param2,..., paramN)</code>
+例如：<code>Array("Mary", "had", "a", "little", "lamb")</code>
+为什么不用构造器？<code>new Array(new Array(1,2), new Array(3,4))  //过于复杂</code>
+
+> 注意，Array(100)和new Array(100)的区别，前一个方法调用的时apply方法，生成的是一个单元素的Array[Int],后者是调用了构造器this(100),结果是Array[Nothing],包含了100个null。
+
+定义apply方法：
+<pre><code>class Account private(val id: Int, initialBalance: Double){
+  private var balance = initialBalance
+}
+object Account {
+  def newUniqueNum() = { lastNum += 1; lastNum}
+  def apply(initialBalance : Double) = {
+    new Account(newUniqueNum(), initialBalance)
+  }
+}
+val account = Account(100.0)</code></pre>
+
+
+#####4.应用程序对象
+每个scala程序，从一个main方法开始：
+<pre><code>object Hello{
+  def main(args: Array[String]) = {
+    println("Hello World");
+  }
+}</code></pre>
+或者扩展App特质，然后将代码放入构造方法内:
+<pre><code>object Hello extends App{
+  println("Hello world")
+}</code></pre>
+
+
+
+#####5.枚举
+scala中没有枚举类型，但是标准类库中提供了一个Enumeration助手类，可以用于产生枚举。
+<pre><code>object TrafficLightColor extends Enumeration{
+  val Red, Yellow, Green = Value
+}</code></pre>
+每次调用Value方法都返回内部类的新实例，该内部类叫做Value。
+或者，也可以向Value方法里传入ID或者名称，或者两个参数都传：
+<pre><code>val Red = Value(0, "Stop")
+val Yellow = Value(10)
+val Green = Value("Go")
+TrafficLightColor.Yellow //使用</code></pre>
+
+
+
+
+
+
+
+
+
 
 
 
