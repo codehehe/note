@@ -488,6 +488,101 @@ TrafficLightColor.Yellow //使用</code></pre>
 
 
 
+第八章 继承
+-----------------------
+
+#####1.扩展类，extends
+<pre><code>class Manager extends Person{
+  var salary = 0.0
+}</code></pre>
+
+可以将类或者类中的字段和方法设置为final类型，以确保类不能被扩展和字段或者方法不能被子类重写。
+
+
+#####2.重写，override
+在子类调用超类的方法时，使用关键字*super*
+<pre><code>class Manager extends Person{
+  override def toString = super.toString + "[salary] : " + salary
+}</code></pre>
+
+
+
+#####3.类型检查和转换
+<pre><code>isInstanceOf[]
+asInstanceOf[]</code></pre>
+isInstanceOf 检查某个对象是不是属于指定的类
+asInstanceOf 将引用转换为子类的引用
+<pre><code>val p = new Student
+if (p.isInstanceOf[Student]){
+  val b = p.asInstanceOf[Student]
+}</code></pre>
+
+如果b不属于Student，而又调用了<code>p.asInstanceOf[Student]</code>,则会抛出异常
+
+如果想测试b指向的对象是Person类，而不是其子类，可以：<code>b.getClass == classOf[Person]</code>
+
+> 类型检查和转换，模式匹配是更好的选择
+
+
+
+#####4.protected
+受保护的字段和方法，只有其子类能访问
+
+
+
+#####5.超类的构造
+<pre><code>class Employee(name: String, age: Int, val salary: Double) extends Person(name, age)</code></pre>
+
+scala中没有类似java中的<code>super(params)</code>
+
+
+
+#####6.重写字段
+scala字段是由一个私有的字段和取值器/改值器组成
+可以用一个同名的val重写一个val或者一个不带参数的def，子类有一个私有字段和一个重写父类的get方法，例如:
+<pre><code>class Person(val name: String){
+  override def toString = getClass.getName + "[name]:" + name
+}
+class SecretAgent(codename: String) extends Person(codename){
+  override val name = "secret"
+  override val toString = "secret"
+}</code></pre>
+
+更常用的方法是用val重写抽象的def：
+<pre><code>abstract class Person{
+  def id: Int
+}
+class Student(override val id : Int) extends Person</code></pre>
+
+def只能重写def
+val能重写val和没有参数的def
+var只能重写另一个抽象的var
+
+
+
+#####7.抽象字段
+<pre><code>abstract class Person{
+  val id: Int    //没有初始化，带有抽象的get
+  var name: String  //带有抽象的get和set
+}</code></pre>
+> 和方法一样，子类重写超类的抽象方法时不需要使用override关键字
+
+
+
+#####8.抽象类
+抽象方法不需要abstract关键字
+某个类存在一个抽象方法，则该类必须是抽象类，abstract关键字定义
+
+
+
+
+
+
+
+
+
+
+
 
 
 
